@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_notes: {
+        Row: {
+          client_id: string
+          contenu: string
+          created_at: string
+          id: string
+          type_note: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          contenu: string
+          created_at?: string
+          id?: string
+          type_note?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          contenu?: string
+          created_at?: string
+          id?: string
+          type_note?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           ca_annuel: number | null
