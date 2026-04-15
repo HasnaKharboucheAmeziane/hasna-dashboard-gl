@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Calculator, Save, Package, MapPin, Weight, Settings } from "lucide-react";
+import { Calculator, Save, Package, MapPin, Weight, Settings, CheckCircle2 } from "lucide-react";
 
 const TVA_RATE = 0.20;
 
@@ -52,6 +52,7 @@ export default function Simulateur() {
   const [nbColis, setNbColis] = useState("1");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [clientId, setClientId] = useState("");
+  const [isCalculated, setIsCalculated] = useState(false);
 
   const { data: tarifs } = useQuery({
     queryKey: ["tarifs-grille"],
@@ -80,7 +81,6 @@ export default function Simulateur() {
     },
   });
 
-  // Extract unique services & zones from tarifs
   const services = useMemo(() => {
     if (!tarifs) return [];
     return [...new Set(tarifs.map((t) => t.type_service))].sort();
@@ -91,7 +91,16 @@ export default function Simulateur() {
     return [...new Set(tarifs.filter((t) => t.type_service === typeService).map((t) => t.options?.zone).filter(Boolean))].sort() as string[];
   }, [tarifs, typeService]);
 
-  // Find matching tariff
+  const selectedClient = useMemo(() => {
+    if (!clientId || !clients) return null;
+    return clients.find((c) => c.id === clientId) || null;
+  }, [clientId, clients]);
+
+  const selectedOptionDetails = useMemo(() => {
+    if (!options || selectedOptions.length === 0) return [];
+    return options.filter((o) => selectedOptions.includes(o.code_option));
+  }, [options, selectedOptions]);
+
   const matchedTarif = useMemo(() => {
     if (!tarifs || !typeService || !zone || !poids) return null;
     const p = parseFloat(poids);
@@ -105,9 +114,8 @@ export default function Simulateur() {
     }) || null;
   }, [tarifs, typeService, zone, poids]);
 
-  // Calculate price
   const calculation = useMemo(() => {
-    if (!matchedTarif) return null;
+    if (!matchedTarif || !isCalculated) return null;
     const p = parseFloat(poids);
     const colis = parseInt(nbColis) || 1;
     const basePrix = matchedTarif.montant_ht;
@@ -133,13 +141,23 @@ export default function Simulateur() {
     const totalTTC = totalHT * (1 + TVA_RATE);
 
     return { prixTransport, prixOptions, optionsDetail, totalHT, totalTTC, colis };
-  }, [matchedTarif, poids, nbColis, selectedOptions, options]);
+  }, [matchedTarif, poids, nbColis, selectedOptions, options, isCalculated]);
 
-  // Count existing devis to generate next number
+  const handleCalculate = () => {
+    if (!typeService) { toast.error("Sélectionnez un type de service"); return; }
+    if (!zone) { toast.error("Sélectionnez une zone"); return; }
+    if (!poids || isNaN(parseFloat(poids))) { toast.error("Saisissez un poids valide"); return; }
+    if (!matchedTarif) { toast.error("Aucun tarif trouvé pour ces critères"); return; }
+    setIsCalculated(true);
+  };
+
+  // Reset calculation when inputs change
+  const resetCalc = () => setIsCalculated(false);
+
   const saveDevis = useMutation({
     mutationFn: async () => {
       if (!clientId) throw new Error("Sélectionnez un client");
-      if (!calculation) throw new Error("Calcul incomplet");
+      if (!calculation) throw new Error("Calculez d'abord le tarif");
 
       const { count } = await supabase.from("devis").select("*", { count: "exact", head: true });
       const num = (count || 0) + 1;
@@ -201,7 +219,7 @@ export default function Simulateur() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Select value={clientId} onValueChange={setClientId}>
+                <Select value={clientId} onValueChange={(v) => { setClientId(v); resetCalc(); }}>
                   <SelectTrigger><SelectValue placeholder="Sélectionner un client" /></SelectTrigger>
                   <SelectContent>
                     {clients?.map((c) => (
@@ -222,7 +240,7 @@ export default function Simulateur() {
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Type de service</Label>
-                  <Select value={typeService} onValueChange={(v) => { setTypeService(v); setZone(""); }}>
+                  <Select value={typeService} onValueChange={(v) => { setTypeService(v); setZone(""); resetCalc(); }}>
                     <SelectTrigger><SelectValue placeholder="Choisir un service" /></SelectTrigger>
                     <SelectContent>
                       {services.map((s) => (
@@ -233,7 +251,7 @@ export default function Simulateur() {
                 </div>
                 <div className="space-y-2">
                   <Label>Zone géographique</Label>
-                  <Select value={zone} onValueChange={setZone} disabled={!typeService}>
+                  <Select value={zone} onValueChange={(v) => { setZone(v); resetCalc(); }} disabled={!typeService}>
                     <SelectTrigger><SelectValue placeholder="Choisir une zone" /></SelectTrigger>
                     <SelectContent>
                       {zones.map((z) => (
@@ -255,11 +273,11 @@ export default function Simulateur() {
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Poids total (kg)</Label>
-                  <Input type="number" min="0" step="0.1" value={poids} onChange={(e) => setPoids(e.target.value)} placeholder="Ex: 12.5" />
+                  <Input type="number" min="0" step="0.1" value={poids} onChange={(e) => { setPoids(e.target.value); resetCalc(); }} placeholder="Ex: 12.5" />
                 </div>
                 <div className="space-y-2">
                   <Label>Nombre de colis</Label>
-                  <Input type="number" min="1" value={nbColis} onChange={(e) => setNbColis(e.target.value)} placeholder="1" />
+                  <Input type="number" min="1" value={nbColis} onChange={(e) => { setNbColis(e.target.value); resetCalc(); }} placeholder="1" />
                 </div>
               </CardContent>
             </Card>
@@ -281,6 +299,7 @@ export default function Simulateur() {
                           setSelectedOptions((prev) =>
                             checked ? [...prev, opt.code_option] : prev.filter((o) => o !== opt.code_option)
                           );
+                          resetCalc();
                         }}
                       />
                       <div className="flex-1 min-w-0">
@@ -298,59 +317,123 @@ export default function Simulateur() {
             </Card>
           </div>
 
-          {/* Summary */}
+          {/* Summary - always visible, progressive */}
           <div className="space-y-6">
             <Card className="border-primary/30 sticky top-6">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Récapitulatif</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {!matchedTarif && (
-                  <p className="text-sm text-muted-foreground text-center py-6">
-                    Renseignez le service, la zone et le poids pour voir le tarif
-                  </p>
+                {/* Progressive display of selections */}
+                <div className="space-y-2 text-sm">
+                  {selectedClient ? (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Client</span>
+                      <span className="font-medium flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-primary" />
+                        {selectedClient.nom_entreprise}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Client</span>
+                      <span className="text-xs text-muted-foreground italic">Non sélectionné</span>
+                    </div>
+                  )}
+
+                  {typeService ? (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Service</span>
+                      <span className="font-medium flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-primary" />
+                        {typeService}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Service</span>
+                      <span className="text-xs text-muted-foreground italic">Non sélectionné</span>
+                    </div>
+                  )}
+
+                  {zone ? (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Zone</span>
+                      <span className="font-medium flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-primary" />
+                        {zone}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Zone</span>
+                      <span className="text-xs text-muted-foreground italic">Non sélectionnée</span>
+                    </div>
+                  )}
+
+                  {poids ? (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Poids</span>
+                      <span className="font-medium flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-primary" />
+                        {poids} kg
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Poids</span>
+                      <span className="text-xs text-muted-foreground italic">Non renseigné</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Colis</span>
+                    <span className="font-medium">×{parseInt(nbColis) || 1}</span>
+                  </div>
+
+                  {selectedOptionDetails.length > 0 && (
+                    <>
+                      <Separator className="my-2" />
+                      <p className="text-xs text-muted-foreground font-medium">Options sélectionnées :</p>
+                      {selectedOptionDetails.map((o) => (
+                        <div key={o.code_option} className="flex justify-between pl-2">
+                          <span className="text-muted-foreground text-xs">{o.nom_option}</span>
+                          <span className="text-xs">{formatEUR(o.prix_ht)}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Calculer button */}
+                {!isCalculated && (
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={handleCalculate}
+                    disabled={!typeService || !zone || !poids}
+                  >
+                    <Calculator className="h-4 w-4 mr-2" />
+                    Calculer
+                  </Button>
                 )}
 
-                {matchedTarif && calculation && (
+                {/* Calculated totals */}
+                {calculation && (
                   <>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Service</span>
-                        <span className="font-medium">{typeService}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Zone</span>
-                        <span className="font-medium">{zone}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Poids</span>
-                        <span className="font-medium">{poids} kg</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Colis</span>
-                        <span className="font-medium">×{calculation.colis}</span>
-                      </div>
-                    </div>
-
-                    <Separator />
-
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Transport ({calculation.colis} colis)</span>
                         <span>{formatEUR(calculation.prixTransport * calculation.colis)}</span>
                       </div>
-
-                      {calculation.optionsDetail.length > 0 && (
-                        <>
-                          <p className="text-xs text-muted-foreground pt-1 font-medium">Options :</p>
-                          {calculation.optionsDetail.map((o, i) => (
-                            <div key={i} className="flex justify-between pl-2">
-                              <span className="text-muted-foreground text-xs">{o.nom}</span>
-                              <span className="text-xs">{formatEUR(o.prix)}</span>
-                            </div>
-                          ))}
-                        </>
-                      )}
+                      {calculation.optionsDetail.length > 0 && calculation.optionsDetail.map((o, i) => (
+                        <div key={i} className="flex justify-between pl-2">
+                          <span className="text-muted-foreground text-xs">{o.nom}</span>
+                          <span className="text-xs">{formatEUR(o.prix)}</span>
+                        </div>
+                      ))}
                     </div>
 
                     <Separator />
@@ -370,17 +453,26 @@ export default function Simulateur() {
                       </div>
                     </div>
 
-                    <Button
-                      className="w-full mt-4"
-                      size="lg"
-                      onClick={() => saveDevis.mutate()}
-                      disabled={!clientId || saveDevis.isPending}
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {saveDevis.isPending ? "Enregistrement..." : "Enregistrer en devis"}
-                    </Button>
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => { resetCalc(); }}
+                      >
+                        <Calculator className="h-4 w-4 mr-2" />
+                        Recalculer
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        onClick={() => saveDevis.mutate()}
+                        disabled={!clientId || saveDevis.isPending}
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        {saveDevis.isPending ? "..." : "Valider en devis"}
+                      </Button>
+                    </div>
                     {!clientId && (
-                      <p className="text-xs text-destructive text-center">Sélectionnez un client pour enregistrer</p>
+                      <p className="text-xs text-destructive text-center">Sélectionnez un client pour valider</p>
                     )}
                   </>
                 )}
