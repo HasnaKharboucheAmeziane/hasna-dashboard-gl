@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, DollarSign, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, Users, FileText, DollarSign, LogOut, Settings, Calculator } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,7 @@ import {
 const items = [
   { title: "Tableau de bord", url: "/", icon: LayoutDashboard },
   { title: "Clients", url: "/clients", icon: Users },
+  { title: "Simulateur", url: "/simulateur", icon: Calculator },
   { title: "Devis", url: "/devis", icon: FileText },
   { title: "Tarifs", url: "/tarifs", icon: DollarSign },
   { title: "Administration", url: "/admin", icon: Settings },
