@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 
-interface DevisPdfData {
+export interface DevisPdfData {
   numeroDevis: string;
   date: string;
   clientNom: string;
@@ -309,6 +309,9 @@ export function generateDevisPdf(data: DevisPdfData) {
   y += 3.5;
   doc.text("www.greenlogistics.fr - contact@greenlogistics.fr", W / 2, y, { align: "center" });
 
-  // Download
-  doc.save(`${data.numeroDevis}.pdf`);
+  // Download or return blob
+  if (options?.download !== false) {
+    doc.save(`${data.numeroDevis}.pdf`);
+  }
+  return doc.output("blob");
 }
