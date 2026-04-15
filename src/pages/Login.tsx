@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Leaf } from "lucide-react";
 
 export default function Login() {
@@ -15,6 +16,13 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, navigate, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,20 +30,56 @@ export default function Login() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          },
+        });
+
         if (error) throw error;
-        toast({ title: "Compte créé", description: "Vérifiez votre email pour confirmer votre inscription." });
+
+        if (data.session) {
+          toast({
+            title: "Compte créé",
+            description: "Votre compte est prêt, redirection vers le dashboard.",
+          });
+          navigate("/", { replace: true });
+        } else {
+          toast({
+            title: "Compte créé",
+            description: "Vérifiez votre email pour confirmer votre inscription.",
+          });
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate("/");
       }
     } catch (error: any) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      const message =
+        error?.message === "User already registered"
+          ? "Cet email existe déjà. Passez en mode connexion pour entrer dans le dashboard."
+          : error?.message === "Invalid login credentials"
+            ? "Email ou mot de passe incorrect."
+            : error?.message === "Email not confirmed"
+              ? "Votre email n'est pas encore confirmé. Réessayez l'inscription ou utilisez un autre compte."
+              : error?.message ?? "Une erreur est survenue.";
+
+      toast({ title: "Erreur", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
