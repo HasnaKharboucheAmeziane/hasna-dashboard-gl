@@ -172,7 +172,7 @@ export default function Simulateur() {
         id_client: clientId,
         type_service: typeService,
         montant_ht: calculation.totalHT,
-        statut: "brouillon",
+        statut: "à valider",
         options: optionsData,
       });
       if (error) throw error;
