@@ -25,7 +25,7 @@ const WHITE = [255, 255, 255] as const;
 const fmt = (n: number) =>
   n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export function generateDevisPdf(data: DevisPdfData, options?: { download?: boolean }): Blob {
+export function generateDevisPdf(data: DevisPdfData, options?: { download?: boolean }): string {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W = 210;
   const margin = 20;
