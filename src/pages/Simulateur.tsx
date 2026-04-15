@@ -78,7 +78,7 @@ export default function Simulateur() {
   const { data: clients } = useQuery({
     queryKey: ["clients-list"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id, nom_entreprise").order("nom_entreprise");
+      const { data, error } = await supabase.from("clients").select("id, nom_entreprise, contact_email").order("nom_entreprise");
       if (error) throw error;
       return data as Client[];
     },
