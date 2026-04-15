@@ -83,11 +83,13 @@ export default function Devis() {
     setEmailTo(d.clients?.contact_email || "");
 
     const pdfData = buildPdfData(d);
-    const dataUri = generateDevisPdf(pdfData, { download: false });
-    setPdfUrl(dataUri);
+    const blob = generateDevisPdf(pdfData, { download: false });
+    const url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+    setPdfUrl(url);
   };
 
   const handleClose = () => {
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     setPdfUrl(null);
     setSelectedDevis(null);
   };
