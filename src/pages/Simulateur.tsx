@@ -52,7 +52,7 @@ export default function Simulateur() {
   const [nbColis, setNbColis] = useState("1");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [clientId, setClientId] = useState("");
-  const [isCalculated, setIsCalculated] = useState(false);
+  
 
   const { data: tarifs } = useQuery({
     queryKey: ["tarifs-grille"],
@@ -115,7 +115,7 @@ export default function Simulateur() {
   }, [tarifs, typeService, zone, poids]);
 
   const calculation = useMemo(() => {
-    if (!matchedTarif || !isCalculated) return null;
+    if (!matchedTarif) return null;
     const p = parseFloat(poids);
     const colis = parseInt(nbColis) || 1;
     const basePrix = matchedTarif.montant_ht;
@@ -141,18 +141,7 @@ export default function Simulateur() {
     const totalTTC = totalHT * (1 + TVA_RATE);
 
     return { prixTransport, prixOptions, optionsDetail, totalHT, totalTTC, colis };
-  }, [matchedTarif, poids, nbColis, selectedOptions, options, isCalculated]);
-
-  const handleCalculate = () => {
-    if (!typeService) { toast.error("Sélectionnez un type de service"); return; }
-    if (!zone) { toast.error("Sélectionnez une zone"); return; }
-    if (!poids || isNaN(parseFloat(poids))) { toast.error("Saisissez un poids valide"); return; }
-    if (!matchedTarif) { toast.error("Aucun tarif trouvé pour ces critères"); return; }
-    setIsCalculated(true);
-  };
-
-  // Reset calculation when inputs change
-  const resetCalc = () => setIsCalculated(false);
+  }, [matchedTarif, poids, nbColis, selectedOptions, options]);
 
   const saveDevis = useMutation({
     mutationFn: async () => {
@@ -219,7 +208,7 @@ export default function Simulateur() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Select value={clientId} onValueChange={(v) => { setClientId(v); resetCalc(); }}>
+                <Select value={clientId} onValueChange={(v) => { setClientId(v); }}>
                   <SelectTrigger><SelectValue placeholder="Sélectionner un client" /></SelectTrigger>
                   <SelectContent>
                     {clients?.map((c) => (
@@ -240,7 +229,7 @@ export default function Simulateur() {
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Type de service</Label>
-                  <Select value={typeService} onValueChange={(v) => { setTypeService(v); setZone(""); resetCalc(); }}>
+                  <Select value={typeService} onValueChange={(v) => { setTypeService(v); setZone(""); }}>
                     <SelectTrigger><SelectValue placeholder="Choisir un service" /></SelectTrigger>
                     <SelectContent>
                       {services.map((s) => (
@@ -251,7 +240,7 @@ export default function Simulateur() {
                 </div>
                 <div className="space-y-2">
                   <Label>Zone géographique</Label>
-                  <Select value={zone} onValueChange={(v) => { setZone(v); resetCalc(); }} disabled={!typeService}>
+                  <Select value={zone} onValueChange={(v) => { setZone(v); }} disabled={!typeService}>
                     <SelectTrigger><SelectValue placeholder="Choisir une zone" /></SelectTrigger>
                     <SelectContent>
                       {zones.map((z) => (
@@ -273,11 +262,11 @@ export default function Simulateur() {
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Poids total (kg)</Label>
-                  <Input type="number" min="0" step="0.1" value={poids} onChange={(e) => { setPoids(e.target.value); resetCalc(); }} placeholder="Ex: 12.5" />
+                  <Input type="number" min="0" step="0.1" value={poids} onChange={(e) => { setPoids(e.target.value); }} placeholder="Ex: 12.5" />
                 </div>
                 <div className="space-y-2">
                   <Label>Nombre de colis</Label>
-                  <Input type="number" min="1" value={nbColis} onChange={(e) => { setNbColis(e.target.value); resetCalc(); }} placeholder="1" />
+                  <Input type="number" min="1" value={nbColis} onChange={(e) => { setNbColis(e.target.value); }} placeholder="1" />
                 </div>
               </CardContent>
             </Card>
@@ -299,7 +288,7 @@ export default function Simulateur() {
                           setSelectedOptions((prev) =>
                             checked ? [...prev, opt.code_option] : prev.filter((o) => o !== opt.code_option)
                           );
-                          resetCalc();
+                         
                         }}
                       />
                       <div className="flex-1 min-w-0">
@@ -407,21 +396,8 @@ export default function Simulateur() {
 
                 <Separator />
 
-                {/* Calculer button */}
-                {!isCalculated && (
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={handleCalculate}
-                    disabled={!typeService || !zone || !poids}
-                  >
-                    <Calculator className="h-4 w-4 mr-2" />
-                    Calculer
-                  </Button>
-                )}
-
-                {/* Calculated totals */}
-                {calculation && (
+                {/* Real-time totals */}
+                {calculation ? (
                   <>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
@@ -453,28 +429,23 @@ export default function Simulateur() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => { resetCalc(); }}
-                      >
-                        <Calculator className="h-4 w-4 mr-2" />
-                        Recalculer
-                      </Button>
-                      <Button
-                        className="flex-1"
-                        onClick={() => saveDevis.mutate()}
-                        disabled={!clientId || saveDevis.isPending}
-                      >
-                        <Save className="h-4 w-4 mr-2" />
-                        {saveDevis.isPending ? "..." : "Valider en devis"}
-                      </Button>
-                    </div>
+                    <Button
+                      className="w-full mt-4"
+                      size="lg"
+                      onClick={() => saveDevis.mutate()}
+                      disabled={!clientId || saveDevis.isPending}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {saveDevis.isPending ? "Enregistrement..." : "Valider en devis"}
+                    </Button>
                     {!clientId && (
                       <p className="text-xs text-destructive text-center">Sélectionnez un client pour valider</p>
                     )}
                   </>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    Renseignez service, zone et poids pour voir le tarif
+                  </p>
                 )}
               </CardContent>
             </Card>
