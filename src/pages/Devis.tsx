@@ -192,7 +192,14 @@ export default function Devis() {
           {/* PDF Preview */}
           <div className="flex-1 min-h-0 border rounded-lg overflow-hidden bg-muted/30">
             {pdfUrl ? (
-              <iframe src={pdfUrl} className="w-full h-[500px]" title="Aperçu du devis" />
+              <object data={pdfUrl} type="application/pdf" className="w-full h-[500px]">
+                <p className="flex items-center justify-center h-[500px] text-muted-foreground text-sm">
+                  Aperçu non disponible —{" "}
+                  <Button variant="link" className="px-1" onClick={handleDownload}>
+                    téléchargez le PDF
+                  </Button>
+                </p>
+              </object>
             ) : (
               <div className="flex items-center justify-center h-[500px] text-muted-foreground">
                 Chargement...
