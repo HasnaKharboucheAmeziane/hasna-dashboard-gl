@@ -141,18 +141,7 @@ export default function Simulateur() {
     const totalTTC = totalHT * (1 + TVA_RATE);
 
     return { prixTransport, prixOptions, optionsDetail, totalHT, totalTTC, colis };
-  }, [matchedTarif, poids, nbColis, selectedOptions, options, isCalculated]);
-
-  const handleCalculate = () => {
-    if (!typeService) { toast.error("Sélectionnez un type de service"); return; }
-    if (!zone) { toast.error("Sélectionnez une zone"); return; }
-    if (!poids || isNaN(parseFloat(poids))) { toast.error("Saisissez un poids valide"); return; }
-    if (!matchedTarif) { toast.error("Aucun tarif trouvé pour ces critères"); return; }
-    setIsCalculated(true);
-  };
-
-  // Reset calculation when inputs change
-  const resetCalc = () => setIsCalculated(false);
+  }, [matchedTarif, poids, nbColis, selectedOptions, options]);
 
   const saveDevis = useMutation({
     mutationFn: async () => {
