@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, DollarSign, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, FileText, DollarSign, LogOut, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ const items = [
   { title: "Clients", url: "/clients", icon: Users },
   { title: "Devis", url: "/devis", icon: FileText },
   { title: "Tarifs", url: "/tarifs", icon: DollarSign },
+  { title: "Administration", url: "/admin", icon: Settings },
 ];
 
 export function AppSidebar() {
