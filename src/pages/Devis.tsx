@@ -1,20 +1,12 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Document, Page, pdfjs } from "react-pdf";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { FileDown, Mail, Eye } from "lucide-react";
-import { generateDevisPdf, type DevisPdfData } from "@/utils/generateDevisPdf";
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+import { ExternalLink } from "lucide-react";
+import { getDevisStatusLabel, type DevisRow } from "@/utils/devis";
 
 const statusVariant = (statut: string) => {
   switch (statut.toLowerCase()) {
@@ -28,49 +20,7 @@ const statusVariant = (statut: string) => {
   }
 };
 
-interface DevisRow {
-  id: string;
-  numero_devis: string;
-  type_service: string;
-  montant_ht: number;
-  statut: string;
-  options: any;
-  id_client: string;
-  created_at: string;
-  clients: { nom_entreprise: string; contact_email: string } | null;
-}
-
-function buildPdfData(d: DevisRow): DevisPdfData {
-  const opts = d.options || {};
-  const detail = opts.detail_calcul || {};
-  const totalHT = d.montant_ht;
-  const totalTVA = totalHT * 0.2;
-  const totalTTC = totalHT * 1.2;
-
-  return {
-    numeroDevis: d.numero_devis,
-    date: new Date(d.created_at).toLocaleDateString("fr-FR"),
-    clientNom: d.clients?.nom_entreprise || "—",
-    clientEmail: d.clients?.contact_email || "",
-    typeService: d.type_service,
-    zone: opts.zone || "",
-    poids: opts.poids || 0,
-    nbColis: opts.nb_colis || 1,
-    prixUnitaire: detail.prix_transport_unitaire || totalHT,
-    optionsDetail: detail.options_detail || [],
-    totalHT,
-    totalTVA,
-    totalTTC,
-  };
-}
-
 export default function Devis() {
-  const [selectedDevis, setSelectedDevis] = useState<DevisRow | null>(null);
-  const [emailTo, setEmailTo] = useState("");
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [numPages, setNumPages] = useState(0);
-  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
-
   const { data: devis, isLoading } = useQuery({
     queryKey: ["devis"],
     queryFn: async () => {
@@ -83,60 +33,12 @@ export default function Devis() {
     },
   });
 
-  useEffect(() => {
-    return () => {
-      setPdfBlob(null);
-    };
-  }, []);
-
-  const handleOpenDevis = async (d: DevisRow) => {
-    setSelectedDevis(d);
-    setEmailTo(d.clients?.contact_email || "");
-    setPdfBlob(null);
-    setNumPages(0);
-    setIsLoadingPreview(true);
-
-    try {
-      const pdfData = buildPdfData(d);
-      const blob = generateDevisPdf(pdfData, { download: false });
-      setPdfBlob(blob);
-    } catch (error) {
-      console.error("Erreur génération aperçu devis:", error);
-      toast.error("Impossible de générer l’aperçu du PDF");
-    } finally {
-      setIsLoadingPreview(false);
-    }
-  };
-
-  const handleClose = () => {
-    setPdfBlob(null);
-    setNumPages(0);
-    setSelectedDevis(null);
-  };
-
-  const handleDownload = () => {
-    if (!selectedDevis) return;
-    const pdfData = buildPdfData(selectedDevis);
-    generateDevisPdf(pdfData, { download: true });
-  };
-
-  const handleSendEmail = () => {
-    if (!emailTo) {
-      toast.error("Veuillez saisir une adresse email");
-      return;
-    }
-
-    const subject = encodeURIComponent(`Devis ${selectedDevis?.numero_devis} - GreenLogistics`);
-    const body = encodeURIComponent(
-      `Bonjour,\n\nVeuillez trouver ci-joint notre devis ${selectedDevis?.numero_devis}.\n\nCordialement,\nL'équipe GreenLogistics`
-    );
-    window.open(`mailto:${emailTo}?subject=${subject}&body=${body}`, "_blank");
-    handleDownload();
-    toast.success("Email ouvert — attachez le PDF téléchargé au message");
-  };
-
   const fmt = (n: number) =>
     n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+  const openDevisWindow = (id: string) => {
+    window.open(`/devis/${id}`, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <DashboardLayout>
@@ -164,109 +66,43 @@ export default function Devis() {
                     <TableHead>Service</TableHead>
                     <TableHead>Montant HT</TableHead>
                     <TableHead>Statut</TableHead>
-                    <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {devis.map((d) => (
-                    <TableRow
-                      key={d.id}
-                      className="cursor-pointer hover:bg-accent/50"
-                      onClick={() => handleOpenDevis(d)}
-                    >
-                      <TableCell className="font-medium">{d.numero_devis}</TableCell>
-                      <TableCell>{d.clients?.nom_entreprise || "—"}</TableCell>
-                      <TableCell>{d.type_service}</TableCell>
-                      <TableCell>{fmt(d.montant_ht)}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusVariant(d.statut)}>{d.statut === "brouillon" ? "à valider" : d.statut}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {devis.map((d) => {
+                    const statusLabel = getDevisStatusLabel(d.statut);
+                    const isPendingValidation = statusLabel === "à valider";
+
+                    return (
+                      <TableRow key={d.id}>
+                        <TableCell className="font-medium">{d.numero_devis}</TableCell>
+                        <TableCell>{d.clients?.nom_entreprise || "—"}</TableCell>
+                        <TableCell>{d.type_service}</TableCell>
+                        <TableCell>{fmt(d.montant_ht)}</TableCell>
+                        <TableCell>
+                          {isPendingValidation ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDevisWindow(d.id)}
+                              className="gap-2"
+                            >
+                              {statusLabel}
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </Button>
+                          ) : (
+                            <Badge variant={statusVariant(statusLabel)}>{statusLabel}</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
           </CardContent>
         </Card>
       </div>
-
-      <Dialog open={!!selectedDevis} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              Devis {selectedDevis?.numero_devis}
-              {selectedDevis && (
-                <Badge variant={statusVariant(selectedDevis.statut)} className="ml-2">
-                  {selectedDevis.statut === "brouillon" ? "à valider" : selectedDevis.statut}
-                </Badge>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="flex-1 min-h-0 border rounded-lg overflow-auto bg-muted/30 p-4">
-            {isLoadingPreview ? (
-              <div className="flex items-center justify-center h-[500px] text-muted-foreground">
-                Chargement de l’aperçu...
-              </div>
-            ) : pdfBlob ? (
-              <div className="flex justify-center">
-                <Document
-                  file={pdfBlob}
-                  loading={<div className="text-muted-foreground py-12">Chargement du PDF...</div>}
-                  onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-                  onLoadError={() => toast.error("Impossible d’afficher le PDF")}
-                >
-                  <div className="space-y-4">
-                    {Array.from({ length: numPages }, (_, index) => (
-                      <div key={index} className="rounded-md border border-border/50 bg-background p-2 shadow-sm">
-                        <Page
-                          pageNumber={index + 1}
-                          width={760}
-                          renderAnnotationLayer={false}
-                          renderTextLayer={false}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </Document>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-[500px] text-muted-foreground text-sm">
-                Aperçu indisponible.
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <div className="flex items-end gap-3">
-              <div className="flex-1 space-y-1.5">
-                <Label htmlFor="email-to">Envoyer par email au client</Label>
-                <Input
-                  id="email-to"
-                  type="email"
-                  value={emailTo}
-                  onChange={(e) => setEmailTo(e.target.value)}
-                  placeholder="email@client.fr"
-                />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="flex-row gap-2 sm:gap-2">
-            <Button variant="outline" onClick={handleDownload}>
-              <FileDown className="h-4 w-4 mr-2" />
-              Télécharger PDF
-            </Button>
-            <Button onClick={handleSendEmail} disabled={!emailTo}>
-              <Mail className="h-4 w-4 mr-2" />
-              Envoyer par email
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

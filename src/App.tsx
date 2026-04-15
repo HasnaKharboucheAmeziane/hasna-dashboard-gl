@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import ClientFiche from "./pages/ClientFiche";
 import Devis from "./pages/Devis";
+import DevisDetail from "./pages/DevisDetail";
 import Tarifs from "./pages/Tarifs";
 import Admin from "./pages/Admin";
 import Simulateur from "./pages/Simulateur";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
           <Route path="/clients/:id" element={<ProtectedRoute><ClientFiche /></ProtectedRoute>} />
           <Route path="/devis" element={<ProtectedRoute><Devis /></ProtectedRoute>} />
+          <Route path="/devis/:id" element={<ProtectedRoute><DevisDetail /></ProtectedRoute>} />
           <Route path="/simulateur" element={<ProtectedRoute><Simulateur /></ProtectedRoute>} />
           <Route path="/tarifs" element={<ProtectedRoute><Tarifs /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
