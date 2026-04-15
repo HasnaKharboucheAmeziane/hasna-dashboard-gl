@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Document, Page, pdfjs } from "react-pdf";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FileDown, Mail, Eye } from "lucide-react";
 import { generateDevisPdf, type DevisPdfData } from "@/utils/generateDevisPdf";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 
 const statusVariant = (statut: string) => {
   switch (statut.toLowerCase()) {
@@ -64,7 +67,9 @@ function buildPdfData(d: DevisRow): DevisPdfData {
 export default function Devis() {
   const [selectedDevis, setSelectedDevis] = useState<DevisRow | null>(null);
   const [emailTo, setEmailTo] = useState("");
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [numPages, setNumPages] = useState(0);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   const { data: devis, isLoading } = useQuery({
     queryKey: ["devis"],
@@ -78,19 +83,34 @@ export default function Devis() {
     },
   });
 
-  const handleOpenDevis = (d: DevisRow) => {
+  useEffect(() => {
+    return () => {
+      setPdfBlob(null);
+    };
+  }, []);
+
+  const handleOpenDevis = async (d: DevisRow) => {
     setSelectedDevis(d);
     setEmailTo(d.clients?.contact_email || "");
+    setPdfBlob(null);
+    setNumPages(0);
+    setIsLoadingPreview(true);
 
-    const pdfData = buildPdfData(d);
-    const blob = generateDevisPdf(pdfData, { download: false });
-    const url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
-    setPdfUrl(url);
+    try {
+      const pdfData = buildPdfData(d);
+      const blob = generateDevisPdf(pdfData, { download: false });
+      setPdfBlob(blob);
+    } catch (error) {
+      console.error("Erreur génération aperçu devis:", error);
+      toast.error("Impossible de générer l’aperçu du PDF");
+    } finally {
+      setIsLoadingPreview(false);
+    }
   };
 
   const handleClose = () => {
-    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-    setPdfUrl(null);
+    setPdfBlob(null);
+    setNumPages(0);
     setSelectedDevis(null);
   };
 
@@ -105,14 +125,12 @@ export default function Devis() {
       toast.error("Veuillez saisir une adresse email");
       return;
     }
-    // mailto fallback — opens email client with subject
+
     const subject = encodeURIComponent(`Devis ${selectedDevis?.numero_devis} - GreenLogistics`);
     const body = encodeURIComponent(
       `Bonjour,\n\nVeuillez trouver ci-joint notre devis ${selectedDevis?.numero_devis}.\n\nCordialement,\nL'équipe GreenLogistics`
     );
     window.open(`mailto:${emailTo}?subject=${subject}&body=${body}`, "_blank");
-
-    // Also download the PDF so it can be attached
     handleDownload();
     toast.success("Email ouvert — attachez le PDF téléchargé au message");
   };
@@ -161,7 +179,7 @@ export default function Devis() {
                       <TableCell>{d.type_service}</TableCell>
                       <TableCell>{fmt(d.montant_ht)}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant(d.statut)}>{d.statut}</Badge>
+                        <Badge variant={statusVariant(d.statut)}>{d.statut === "brouillon" ? "à valider" : d.statut}</Badge>
                       </TableCell>
                       <TableCell>
                         <Eye className="h-4 w-4 text-muted-foreground" />
@@ -175,39 +193,53 @@ export default function Devis() {
         </Card>
       </div>
 
-      {/* Devis detail dialog */}
       <Dialog open={!!selectedDevis} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Devis {selectedDevis?.numero_devis}
               {selectedDevis && (
                 <Badge variant={statusVariant(selectedDevis.statut)} className="ml-2">
-                  {selectedDevis.statut}
+                  {selectedDevis.statut === "brouillon" ? "à valider" : selectedDevis.statut}
                 </Badge>
               )}
             </DialogTitle>
           </DialogHeader>
 
-          {/* PDF Preview */}
-          <div className="flex-1 min-h-0 border rounded-lg overflow-hidden bg-muted/30">
-            {pdfUrl ? (
-              <object data={pdfUrl} type="application/pdf" className="w-full h-[500px]">
-                <p className="flex items-center justify-center h-[500px] text-muted-foreground text-sm">
-                  Aperçu non disponible —{" "}
-                  <Button variant="link" className="px-1" onClick={handleDownload}>
-                    téléchargez le PDF
-                  </Button>
-                </p>
-              </object>
-            ) : (
+          <div className="flex-1 min-h-0 border rounded-lg overflow-auto bg-muted/30 p-4">
+            {isLoadingPreview ? (
               <div className="flex items-center justify-center h-[500px] text-muted-foreground">
-                Chargement...
+                Chargement de l’aperçu...
+              </div>
+            ) : pdfBlob ? (
+              <div className="flex justify-center">
+                <Document
+                  file={pdfBlob}
+                  loading={<div className="text-muted-foreground py-12">Chargement du PDF...</div>}
+                  onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                  onLoadError={() => toast.error("Impossible d’afficher le PDF")}
+                >
+                  <div className="space-y-4">
+                    {Array.from({ length: numPages }, (_, index) => (
+                      <div key={index} className="rounded-md border border-border/50 bg-background p-2 shadow-sm">
+                        <Page
+                          pageNumber={index + 1}
+                          width={760}
+                          renderAnnotationLayer={false}
+                          renderTextLayer={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Document>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[500px] text-muted-foreground text-sm">
+                Aperçu indisponible.
               </div>
             )}
           </div>
 
-          {/* Email section */}
           <div className="space-y-3 pt-2">
             <div className="flex items-end gap-3">
               <div className="flex-1 space-y-1.5">
