@@ -179,7 +179,29 @@ export default function Simulateur() {
     },
     onSuccess: (numero) => {
       queryClient.invalidateQueries({ queryKey: ["devis"] });
-      toast.success(`Devis ${numero} enregistré avec succès`);
+
+      // Generate PDF
+      const clientName = clients?.find((c) => c.id === clientId)?.nom_entreprise ?? "";
+      const clientEmail = clients?.find((c) => c.id === clientId)?.contact_email ?? "";
+      if (calculation) {
+        generateDevisPdf({
+          numeroDevis: numero,
+          date: new Date().toLocaleDateString("fr-FR"),
+          clientNom: clientName,
+          clientEmail,
+          typeService,
+          zone,
+          poids: parseFloat(poids),
+          nbColis: parseInt(nbColis) || 1,
+          prixUnitaire: calculation.prixTransport,
+          optionsDetail: calculation.optionsDetail,
+          totalHT: calculation.totalHT,
+          totalTVA: calculation.totalTTC - calculation.totalHT,
+          totalTTC: calculation.totalTTC,
+        });
+      }
+
+      toast.success(`Devis ${numero} enregistré et PDF généré`);
       navigate("/devis");
     },
     onError: (err: Error) => toast.error(err.message),
