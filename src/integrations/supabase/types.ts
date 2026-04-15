@@ -126,6 +126,39 @@ export type Database = {
           },
         ]
       }
+      options: {
+        Row: {
+          code_option: string
+          created_at: string
+          description: string | null
+          id: string
+          nom_option: string
+          prix_ht: number
+          type_facturation: string
+          updated_at: string
+        }
+        Insert: {
+          code_option: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom_option: string
+          prix_ht?: number
+          type_facturation?: string
+          updated_at?: string
+        }
+        Update: {
+          code_option?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom_option?: string
+          prix_ht?: number
+          type_facturation?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tarifs: {
         Row: {
           created_at: string
