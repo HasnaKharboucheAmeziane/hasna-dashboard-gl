@@ -52,7 +52,7 @@ export default function Simulateur() {
   const [nbColis, setNbColis] = useState("1");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [clientId, setClientId] = useState("");
-  const [isCalculated, setIsCalculated] = useState(false);
+  
 
   const { data: tarifs } = useQuery({
     queryKey: ["tarifs-grille"],
