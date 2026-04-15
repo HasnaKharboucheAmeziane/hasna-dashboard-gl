@@ -309,9 +309,9 @@ export function generateDevisPdf(data: DevisPdfData, options?: { download?: bool
   y += 3.5;
   doc.text("www.greenlogistics.fr - contact@greenlogistics.fr", W / 2, y, { align: "center" });
 
-  // Download or return blob
+  // Download or return data URI
   if (options?.download !== false) {
     doc.save(`${data.numeroDevis}.pdf`);
   }
-  return doc.output("blob");
+  return doc.output("datauristring");
 }
