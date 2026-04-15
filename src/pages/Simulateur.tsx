@@ -42,6 +42,7 @@ interface Option {
 interface Client {
   id: string;
   nom_entreprise: string;
+  contact_email: string;
 }
 
 export default function Simulateur() {
