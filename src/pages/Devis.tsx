@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ const statusVariant = (statut: string) => {
 };
 
 export default function Devis() {
+  const navigate = useNavigate();
   const { data: devis, isLoading } = useQuery({
     queryKey: ["devis"],
     queryFn: async () => {
@@ -37,7 +39,7 @@ export default function Devis() {
     n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 
   const openDevisWindow = (id: string) => {
-    window.open(`/devis/${id}`, "_blank", "noopener,noreferrer");
+    navigate(`/devis/${id}`);
   };
 
   return (
