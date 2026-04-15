@@ -11,6 +11,7 @@ import ClientFiche from "./pages/ClientFiche";
 import Devis from "./pages/Devis";
 import Tarifs from "./pages/Tarifs";
 import Admin from "./pages/Admin";
+import Simulateur from "./pages/Simulateur";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
