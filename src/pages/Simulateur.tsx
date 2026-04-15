@@ -407,21 +407,8 @@ export default function Simulateur() {
 
                 <Separator />
 
-                {/* Calculer button */}
-                {!isCalculated && (
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={handleCalculate}
-                    disabled={!typeService || !zone || !poids}
-                  >
-                    <Calculator className="h-4 w-4 mr-2" />
-                    Calculer
-                  </Button>
-                )}
-
-                {/* Calculated totals */}
-                {calculation && (
+                {/* Real-time totals */}
+                {calculation ? (
                   <>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
@@ -453,28 +440,23 @@ export default function Simulateur() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => { resetCalc(); }}
-                      >
-                        <Calculator className="h-4 w-4 mr-2" />
-                        Recalculer
-                      </Button>
-                      <Button
-                        className="flex-1"
-                        onClick={() => saveDevis.mutate()}
-                        disabled={!clientId || saveDevis.isPending}
-                      >
-                        <Save className="h-4 w-4 mr-2" />
-                        {saveDevis.isPending ? "..." : "Valider en devis"}
-                      </Button>
-                    </div>
+                    <Button
+                      className="w-full mt-4"
+                      size="lg"
+                      onClick={() => saveDevis.mutate()}
+                      disabled={!clientId || saveDevis.isPending}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {saveDevis.isPending ? "Enregistrement..." : "Valider en devis"}
+                    </Button>
                     {!clientId && (
                       <p className="text-xs text-destructive text-center">Sélectionnez un client pour valider</p>
                     )}
                   </>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    Renseignez service, zone et poids pour voir le tarif
+                  </p>
                 )}
               </CardContent>
             </Card>
