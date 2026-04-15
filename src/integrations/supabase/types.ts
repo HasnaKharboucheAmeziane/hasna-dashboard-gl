@@ -14,7 +14,127 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          ca_annuel: number | null
+          contact_email: string
+          created_at: string
+          id: string
+          nom_entreprise: string
+          statut: string
+          type_client: string
+          updated_at: string
+        }
+        Insert: {
+          ca_annuel?: number | null
+          contact_email: string
+          created_at?: string
+          id?: string
+          nom_entreprise: string
+          statut?: string
+          type_client?: string
+          updated_at?: string
+        }
+        Update: {
+          ca_annuel?: number | null
+          contact_email?: string
+          created_at?: string
+          id?: string
+          nom_entreprise?: string
+          statut?: string
+          type_client?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      devis: {
+        Row: {
+          created_at: string
+          id: string
+          id_client: string
+          montant_ht: number
+          numero_devis: string
+          options: Json | null
+          statut: string
+          type_service: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_client: string
+          montant_ht?: number
+          numero_devis: string
+          options?: Json | null
+          statut?: string
+          type_service: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_client?: string
+          montant_ht?: number
+          numero_devis?: string
+          options?: Json | null
+          statut?: string
+          type_service?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_id_client_fkey"
+            columns: ["id_client"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarifs: {
+        Row: {
+          created_at: string
+          id: string
+          id_client: string
+          montant_ht: number
+          numero_devis: string
+          options: Json | null
+          statut: string
+          type_service: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_client: string
+          montant_ht?: number
+          numero_devis: string
+          options?: Json | null
+          statut?: string
+          type_service: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_client?: string
+          montant_ht?: number
+          numero_devis?: string
+          options?: Json | null
+          statut?: string
+          type_service?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarifs_id_client_fkey"
+            columns: ["id_client"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
