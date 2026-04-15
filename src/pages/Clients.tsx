@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
 export default function Clients() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -46,7 +46,11 @@ export default function Clients() {
                 <TableBody>
                   {clients.map((c) => (
                     <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.nom_entreprise}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link to={`/clients/${c.id}`} className="text-primary hover:underline cursor-pointer">
+                          {c.nom_entreprise}
+                        </Link>
+                      </TableCell>
                       <TableCell>{c.contact_email}</TableCell>
                       <TableCell>{c.type_client}</TableCell>
                       <TableCell>{(c.ca_annuel || 0).toLocaleString("fr-FR")} €</TableCell>
