@@ -25,7 +25,7 @@ const WHITE = [255, 255, 255] as const;
 const fmt = (n: number) =>
   n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export function generateDevisPdf(data: DevisPdfData, options?: { download?: boolean }): Blob {
+export function generateDevisPdf(data: DevisPdfData, options?: { download?: boolean }): string {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W = 210;
   const margin = 20;
@@ -309,9 +309,9 @@ export function generateDevisPdf(data: DevisPdfData, options?: { download?: bool
   y += 3.5;
   doc.text("www.greenlogistics.fr - contact@greenlogistics.fr", W / 2, y, { align: "center" });
 
-  // Download or return blob
+  // Download or return data URI
   if (options?.download !== false) {
     doc.save(`${data.numeroDevis}.pdf`);
   }
-  return doc.output("blob");
+  return doc.output("datauristring");
 }
