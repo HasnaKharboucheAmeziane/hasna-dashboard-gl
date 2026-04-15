@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Calculator, Save, Package, MapPin, Weight, Settings, CheckCircle2 } from "lucide-react";
+import { generateDevisPdf } from "@/utils/generateDevisPdf";
 
 const TVA_RATE = 0.20;
 
