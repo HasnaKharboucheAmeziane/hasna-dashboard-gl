@@ -6,6 +6,7 @@ const routeNames: Record<string, string> = {
   clients: "Clients",
   devis: "Devis",
   tarifs: "Tarifs",
+  admin: "Administration",
 };
 
 export function Breadcrumb() {
