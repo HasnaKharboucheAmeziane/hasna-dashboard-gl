@@ -443,6 +443,10 @@ export default function Simulateur() {
                       <p className="text-xs text-destructive text-center">Sélectionnez un client pour valider</p>
                     )}
                   </>
+                ) : typeService && zone && poids ? (
+                  <p className="text-sm text-destructive text-center py-2">
+                    Aucun tarif trouvé pour ce poids ({poids} kg) dans cette zone. Vérifiez la tranche de poids.
+                  </p>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-2">
                     Renseignez service, zone et poids pour voir le tarif
