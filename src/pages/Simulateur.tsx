@@ -115,7 +115,7 @@ export default function Simulateur() {
   }, [tarifs, typeService, zone, poids]);
 
   const calculation = useMemo(() => {
-    if (!matchedTarif || !isCalculated) return null;
+    if (!matchedTarif) return null;
     const p = parseFloat(poids);
     const colis = parseInt(nbColis) || 1;
     const basePrix = matchedTarif.montant_ht;
