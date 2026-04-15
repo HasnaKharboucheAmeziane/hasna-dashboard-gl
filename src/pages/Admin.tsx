@@ -1,9 +1,21 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Building2,
+  CircleDollarSign,
+  ClipboardList,
+  FileText,
+  Pencil,
+  Plus,
+  Settings2,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,37 +24,116 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
 
-// ─── Client Form ───
-function ClientForm({ client, onSave, onCancel }: {
-  client?: any;
-  onSave: (data: any) => void;
+type Client = Tables<"clients">;
+type Devis = Tables<"devis">;
+type Tarif = Tables<"tarifs">;
+
+type ClientPayload = Pick<Client, "nom_entreprise" | "contact_email" | "type_client" | "statut" | "ca_annuel">;
+type DevisPayload = Pick<Devis, "numero_devis" | "id_client" | "statut" | "montant_ht" | "type_service">;
+type TarifPayload = Pick<Tarif, "numero_devis" | "id_client" | "statut" | "montant_ht" | "type_service">;
+
+function MetricCard({
+  title,
+  value,
+  helper,
+  icon: Icon,
+}: {
+  title: string;
+  value: string;
+  helper: string;
+  icon: typeof Building2;
+}) {
+  return (
+    <Card className="border-border/50">
+      <CardContent className="flex items-start justify-between p-6">
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">{title}</p>
+          <p className="text-3xl font-semibold tracking-tight text-foreground">{value}</p>
+          <p className="text-sm text-muted-foreground">{helper}</p>
+        </div>
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SiteStepCard({
+  title,
+  count,
+  helper,
+  icon: Icon,
+}: {
+  title: string;
+  count: string;
+  helper: string;
+  icon: typeof Building2;
+}) {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="space-y-3 pb-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div>
+          <CardTitle className="text-base">{title}</CardTitle>
+          <CardDescription className="mt-1">{helper}</CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-semibold">{count}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ClientForm({
+  client,
+  onSave,
+  onCancel,
+}: {
+  client?: Client | null;
+  onSave: (data: ClientPayload) => void;
   onCancel: () => void;
 }) {
-  const [form, setForm] = useState({
-    nom_entreprise: client?.nom_entreprise || "",
-    contact_email: client?.contact_email || "",
-    type_client: client?.type_client || "prospect",
-    statut: client?.statut || "actif",
-    ca_annuel: client?.ca_annuel?.toString() || "0",
+  const [form, setForm] = useState<ClientPayload>({
+    nom_entreprise: client?.nom_entreprise ?? "",
+    contact_email: client?.contact_email ?? "",
+    type_client: client?.type_client ?? "prospect",
+    statut: client?.statut ?? "actif",
+    ca_annuel: Number(client?.ca_annuel ?? 0),
   });
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Nom entreprise</Label>
-        <Input value={form.nom_entreprise} onChange={e => setForm({ ...form, nom_entreprise: e.target.value })} />
+        <Label htmlFor="client-name">Nom entreprise</Label>
+        <Input
+          id="client-name"
+          value={form.nom_entreprise}
+          onChange={(e) => setForm((current) => ({ ...current, nom_entreprise: e.target.value }))}
+        />
       </div>
+
       <div className="space-y-2">
-        <Label>Email contact</Label>
-        <Input type="email" value={form.contact_email} onChange={e => setForm({ ...form, contact_email: e.target.value })} />
+        <Label htmlFor="client-email">Email contact</Label>
+        <Input
+          id="client-email"
+          type="email"
+          value={form.contact_email}
+          onChange={(e) => setForm((current) => ({ ...current, contact_email: e.target.value }))}
+        />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Type client</Label>
-          <Select value={form.type_client} onValueChange={v => setForm({ ...form, type_client: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select value={form.type_client} onValueChange={(value) => setForm((current) => ({ ...current, type_client: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="prospect">Prospect</SelectItem>
               <SelectItem value="client">Client</SelectItem>
@@ -50,10 +141,13 @@ function ClientForm({ client, onSave, onCancel }: {
             </SelectContent>
           </Select>
         </div>
+
         <div className="space-y-2">
           <Label>Statut</Label>
-          <Select value={form.statut} onValueChange={v => setForm({ ...form, statut: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select value={form.statut} onValueChange={(value) => setForm((current) => ({ ...current, statut: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="actif">Actif</SelectItem>
               <SelectItem value="inactif">Inactif</SelectItem>
@@ -61,61 +155,87 @@ function ClientForm({ client, onSave, onCancel }: {
           </Select>
         </div>
       </div>
+
       <div className="space-y-2">
-        <Label>CA Annuel (€)</Label>
-        <Input type="number" value={form.ca_annuel} onChange={e => setForm({ ...form, ca_annuel: e.target.value })} />
+        <Label htmlFor="client-turnover">CA annuel (€)</Label>
+        <Input
+          id="client-turnover"
+          type="number"
+          value={form.ca_annuel}
+          onChange={(e) => setForm((current) => ({ ...current, ca_annuel: Number(e.target.value) || 0 }))}
+        />
       </div>
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={onCancel}>Annuler</Button>
-        <Button onClick={() => onSave({ ...form, ca_annuel: parseFloat(form.ca_annuel) || 0 })}>
-          {client ? "Modifier" : "Créer"}
-        </Button>
+        <Button onClick={() => onSave(form)}>{client ? "Modifier" : "Créer"}</Button>
       </div>
     </div>
   );
 }
 
-// ─── Devis Form ───
-function DevisForm({ devis, clients, onSave, onCancel }: {
-  devis?: any;
-  clients: any[];
-  onSave: (data: any) => void;
+function DevisForm({
+  devis,
+  clients,
+  onSave,
+  onCancel,
+}: {
+  devis?: Devis | null;
+  clients: Client[];
+  onSave: (data: DevisPayload) => void;
   onCancel: () => void;
 }) {
-  const [form, setForm] = useState({
-    numero_devis: devis?.numero_devis || "",
-    id_client: devis?.id_client || "",
-    statut: devis?.statut || "brouillon",
-    montant_ht: devis?.montant_ht?.toString() || "0",
-    type_service: devis?.type_service || "",
+  const [form, setForm] = useState<DevisPayload>({
+    numero_devis: devis?.numero_devis ?? "",
+    id_client: devis?.id_client ?? "",
+    statut: devis?.statut ?? "brouillon",
+    montant_ht: Number(devis?.montant_ht ?? 0),
+    type_service: devis?.type_service ?? "",
   });
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>N° Devis</Label>
-        <Input value={form.numero_devis} onChange={e => setForm({ ...form, numero_devis: e.target.value })} />
+        <Label htmlFor="devis-number">N° devis</Label>
+        <Input
+          id="devis-number"
+          value={form.numero_devis}
+          onChange={(e) => setForm((current) => ({ ...current, numero_devis: e.target.value }))}
+        />
       </div>
+
       <div className="space-y-2">
         <Label>Client</Label>
-        <Select value={form.id_client} onValueChange={v => setForm({ ...form, id_client: v })}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner un client" /></SelectTrigger>
+        <Select value={form.id_client} onValueChange={(value) => setForm((current) => ({ ...current, id_client: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="Sélectionner un client" />
+          </SelectTrigger>
           <SelectContent>
-            {clients.map(c => (
-              <SelectItem key={c.id} value={c.id}>{c.nom_entreprise}</SelectItem>
+            {clients.map((client) => (
+              <SelectItem key={client.id} value={client.id}>
+                {client.nom_entreprise}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label>Type de service</Label>
-          <Input value={form.type_service} onChange={e => setForm({ ...form, type_service: e.target.value })} />
+          <Label htmlFor="devis-service">Type de service</Label>
+          <Input
+            id="devis-service"
+            value={form.type_service}
+            onChange={(e) => setForm((current) => ({ ...current, type_service: e.target.value }))}
+          />
         </div>
+
         <div className="space-y-2">
           <Label>Statut</Label>
-          <Select value={form.statut} onValueChange={v => setForm({ ...form, statut: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select value={form.statut} onValueChange={(value) => setForm((current) => ({ ...current, statut: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="brouillon">Brouillon</SelectItem>
               <SelectItem value="en cours">En cours</SelectItem>
@@ -125,61 +245,87 @@ function DevisForm({ devis, clients, onSave, onCancel }: {
           </Select>
         </div>
       </div>
+
       <div className="space-y-2">
-        <Label>Montant HT (€)</Label>
-        <Input type="number" value={form.montant_ht} onChange={e => setForm({ ...form, montant_ht: e.target.value })} />
+        <Label htmlFor="devis-amount">Montant HT (€)</Label>
+        <Input
+          id="devis-amount"
+          type="number"
+          value={form.montant_ht}
+          onChange={(e) => setForm((current) => ({ ...current, montant_ht: Number(e.target.value) || 0 }))}
+        />
       </div>
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={onCancel}>Annuler</Button>
-        <Button onClick={() => onSave({ ...form, montant_ht: parseFloat(form.montant_ht) || 0 })}>
-          {devis ? "Modifier" : "Créer"}
-        </Button>
+        <Button onClick={() => onSave(form)}>{devis ? "Modifier" : "Créer"}</Button>
       </div>
     </div>
   );
 }
 
-// ─── Tarif Form ───
-function TarifForm({ tarif, clients, onSave, onCancel }: {
-  tarif?: any;
-  clients: any[];
-  onSave: (data: any) => void;
+function TarifForm({
+  tarif,
+  clients,
+  onSave,
+  onCancel,
+}: {
+  tarif?: Tarif | null;
+  clients: Client[];
+  onSave: (data: TarifPayload) => void;
   onCancel: () => void;
 }) {
-  const [form, setForm] = useState({
-    numero_devis: tarif?.numero_devis || "",
-    id_client: tarif?.id_client || "",
-    statut: tarif?.statut || "actif",
-    montant_ht: tarif?.montant_ht?.toString() || "0",
-    type_service: tarif?.type_service || "",
+  const [form, setForm] = useState<TarifPayload>({
+    numero_devis: tarif?.numero_devis ?? "",
+    id_client: tarif?.id_client ?? "",
+    statut: tarif?.statut ?? "actif",
+    montant_ht: Number(tarif?.montant_ht ?? 0),
+    type_service: tarif?.type_service ?? "",
   });
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Référence</Label>
-        <Input value={form.numero_devis} onChange={e => setForm({ ...form, numero_devis: e.target.value })} />
+        <Label htmlFor="tarif-reference">Référence</Label>
+        <Input
+          id="tarif-reference"
+          value={form.numero_devis}
+          onChange={(e) => setForm((current) => ({ ...current, numero_devis: e.target.value }))}
+        />
       </div>
+
       <div className="space-y-2">
         <Label>Client</Label>
-        <Select value={form.id_client} onValueChange={v => setForm({ ...form, id_client: v })}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner un client" /></SelectTrigger>
+        <Select value={form.id_client} onValueChange={(value) => setForm((current) => ({ ...current, id_client: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="Sélectionner un client" />
+          </SelectTrigger>
           <SelectContent>
-            {clients.map(c => (
-              <SelectItem key={c.id} value={c.id}>{c.nom_entreprise}</SelectItem>
+            {clients.map((client) => (
+              <SelectItem key={client.id} value={client.id}>
+                {client.nom_entreprise}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label>Type de service</Label>
-          <Input value={form.type_service} onChange={e => setForm({ ...form, type_service: e.target.value })} />
+          <Label htmlFor="tarif-service">Type de service</Label>
+          <Input
+            id="tarif-service"
+            value={form.type_service}
+            onChange={(e) => setForm((current) => ({ ...current, type_service: e.target.value }))}
+          />
         </div>
+
         <div className="space-y-2">
           <Label>Statut</Label>
-          <Select value={form.statut} onValueChange={v => setForm({ ...form, statut: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select value={form.statut} onValueChange={(value) => setForm((current) => ({ ...current, statut: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="actif">Actif</SelectItem>
               <SelectItem value="inactif">Inactif</SelectItem>
@@ -187,27 +333,32 @@ function TarifForm({ tarif, clients, onSave, onCancel }: {
           </Select>
         </div>
       </div>
+
       <div className="space-y-2">
-        <Label>Montant HT (€)</Label>
-        <Input type="number" value={form.montant_ht} onChange={e => setForm({ ...form, montant_ht: e.target.value })} />
+        <Label htmlFor="tarif-amount">Montant HT (€)</Label>
+        <Input
+          id="tarif-amount"
+          type="number"
+          value={form.montant_ht}
+          onChange={(e) => setForm((current) => ({ ...current, montant_ht: Number(e.target.value) || 0 }))}
+        />
       </div>
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={onCancel}>Annuler</Button>
-        <Button onClick={() => onSave({ ...form, montant_ht: parseFloat(form.montant_ht) || 0 })}>
-          {tarif ? "Modifier" : "Créer"}
-        </Button>
+        <Button onClick={() => onSave(form)}>{tarif ? "Modifier" : "Créer"}</Button>
       </div>
     </div>
   );
 }
 
-// ─── Admin Page ───
 export default function Admin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [editingClient, setEditingClient] = useState<any>(null);
-  const [editingDevis, setEditingDevis] = useState<any>(null);
-  const [editingTarif, setEditingTarif] = useState<any>(null);
+
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [editingDevis, setEditingDevis] = useState<Devis | null>(null);
+  const [editingTarif, setEditingTarif] = useState<Tarif | null>(null);
   const [showClientDialog, setShowClientDialog] = useState(false);
   const [showDevisDialog, setShowDevisDialog] = useState(false);
   const [showTarifDialog, setShowTarifDialog] = useState(false);
@@ -224,7 +375,7 @@ export default function Admin() {
   const { data: devis = [] } = useQuery({
     queryKey: ["devis"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("devis").select("*, clients(nom_entreprise)").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("devis").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -233,36 +384,43 @@ export default function Admin() {
   const { data: tarifs = [] } = useQuery({
     queryKey: ["tarifs"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("tarifs").select("*, clients(nom_entreprise)").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("tarifs").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
-  const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["clients"] });
-    queryClient.invalidateQueries({ queryKey: ["devis"] });
-    queryClient.invalidateQueries({ queryKey: ["tarifs"] });
+  const clientNameById = useMemo(() => new Map(clients.map((client) => [client.id, client.nom_entreprise])), [clients]);
+  const activeClients = clients.filter((client) => client.statut === "actif").length;
+  const devisInProgress = devis.filter((item) => item.statut === "en cours").length;
+  const activeTarifs = tarifs.filter((item) => item.statut === "actif").length;
+  const totalRevenue = devis.reduce((sum, item) => sum + Number(item.montant_ht ?? 0), 0);
+
+  const invalidateAll = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["clients"] }),
+      queryClient.invalidateQueries({ queryKey: ["devis"] }),
+      queryClient.invalidateQueries({ queryKey: ["tarifs"] }),
+    ]);
   };
 
-  // ── Client mutations ──
   const saveClient = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: ClientPayload) => {
       if (editingClient?.id) {
         const { error } = await supabase.from("clients").update(data).eq("id", editingClient.id);
         if (error) throw error;
-      } else {
-        const { error } = await supabase.from("clients").insert(data);
-        if (error) throw error;
+        return;
       }
+      const { error } = await supabase.from("clients").insert(data);
+      if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: editingClient?.id ? "Client modifié" : "Client créé" });
-      invalidateAll();
+      await invalidateAll();
       setShowClientDialog(false);
       setEditingClient(null);
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (error: Error) => toast({ title: "Erreur", description: error.message, variant: "destructive" }),
   });
 
   const deleteClient = useMutation({
@@ -270,28 +428,30 @@ export default function Admin() {
       const { error } = await supabase.from("clients").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast({ title: "Client supprimé" }); invalidateAll(); },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onSuccess: async () => {
+      toast({ title: "Client supprimé" });
+      await invalidateAll();
+    },
+    onError: (error: Error) => toast({ title: "Erreur", description: error.message, variant: "destructive" }),
   });
 
-  // ── Devis mutations ──
   const saveDevis = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: DevisPayload) => {
       if (editingDevis?.id) {
         const { error } = await supabase.from("devis").update(data).eq("id", editingDevis.id);
         if (error) throw error;
-      } else {
-        const { error } = await supabase.from("devis").insert(data);
-        if (error) throw error;
+        return;
       }
+      const { error } = await supabase.from("devis").insert(data);
+      if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: editingDevis?.id ? "Devis modifié" : "Devis créé" });
-      invalidateAll();
+      await invalidateAll();
       setShowDevisDialog(false);
       setEditingDevis(null);
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (error: Error) => toast({ title: "Erreur", description: error.message, variant: "destructive" }),
   });
 
   const deleteDevis = useMutation({
@@ -299,28 +459,30 @@ export default function Admin() {
       const { error } = await supabase.from("devis").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast({ title: "Devis supprimé" }); invalidateAll(); },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onSuccess: async () => {
+      toast({ title: "Devis supprimé" });
+      await invalidateAll();
+    },
+    onError: (error: Error) => toast({ title: "Erreur", description: error.message, variant: "destructive" }),
   });
 
-  // ── Tarif mutations ──
   const saveTarif = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: TarifPayload) => {
       if (editingTarif?.id) {
         const { error } = await supabase.from("tarifs").update(data).eq("id", editingTarif.id);
         if (error) throw error;
-      } else {
-        const { error } = await supabase.from("tarifs").insert(data);
-        if (error) throw error;
+        return;
       }
+      const { error } = await supabase.from("tarifs").insert(data);
+      if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: editingTarif?.id ? "Tarif modifié" : "Tarif créé" });
-      invalidateAll();
+      await invalidateAll();
       setShowTarifDialog(false);
       setEditingTarif(null);
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (error: Error) => toast({ title: "Erreur", description: error.message, variant: "destructive" }),
   });
 
   const deleteTarif = useMutation({
@@ -328,39 +490,82 @@ export default function Admin() {
       const { error } = await supabase.from("tarifs").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast({ title: "Tarif supprimé" }); invalidateAll(); },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onSuccess: async () => {
+      toast({ title: "Tarif supprimé" });
+      await invalidateAll();
+    },
+    onError: (error: Error) => toast({ title: "Erreur", description: error.message, variant: "destructive" }),
   });
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Administration</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gérer les clients, devis et tarifs</p>
+        <Card className="border-border/50 bg-card">
+          <CardContent className="flex flex-col gap-6 p-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-3">
+              <Badge variant="secondary" className="w-fit">Administration du site</Badge>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-semibold tracking-tight">Centre de gestion GreenLogistics</h1>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Pilotez les données commerciales, surveillez les étapes clés du cycle client et intervenez rapidement sur chaque contenu métier du site.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => { setEditingClient(null); setShowClientDialog(true); }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouveau client
+              </Button>
+              <Button variant="outline" onClick={() => { setEditingDevis(null); setShowDevisDialog(true); }}>
+                <FileText className="mr-2 h-4 w-4" />
+                Nouveau devis
+              </Button>
+              <Button variant="outline" onClick={() => { setEditingTarif(null); setShowTarifDialog(true); }}>
+                <CircleDollarSign className="mr-2 h-4 w-4" />
+                Nouveau tarif
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard title="Clients actifs" value={activeClients.toString()} helper={`${clients.length} fiches clients au total`} icon={Users} />
+          <MetricCard title="Devis en cours" value={devisInProgress.toString()} helper={`${devis.length} devis enregistrés`} icon={ClipboardList} />
+          <MetricCard title="Tarifs actifs" value={activeTarifs.toString()} helper={`${tarifs.length} références tarifaires`} icon={Settings2} />
+          <MetricCard title="Montant total devis" value={`${totalRevenue.toLocaleString("fr-FR")} €`} helper="Cumul des montants HT saisis" icon={CircleDollarSign} />
         </div>
 
-        <Tabs defaultValue="clients">
-          <TabsList>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <SiteStepCard title="Étape 1 · Acquisition" count={`${clients.filter((client) => client.type_client === "prospect").length} prospects`} helper="Suivi des entreprises à convertir" icon={Building2} />
+          <SiteStepCard title="Étape 2 · Chiffrage" count={`${devisInProgress} devis ouverts`} helper="Opportunités à finaliser ou relancer" icon={FileText} />
+          <SiteStepCard title="Étape 3 · Tarification" count={`${activeTarifs} tarifs actifs`} helper="Références prêtes à l’usage commercial" icon={CircleDollarSign} />
+        </div>
+
+        <Tabs defaultValue="clients" className="space-y-4">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0">
             <TabsTrigger value="clients">Clients</TabsTrigger>
             <TabsTrigger value="devis">Devis</TabsTrigger>
             <TabsTrigger value="tarifs">Tarifs</TabsTrigger>
           </TabsList>
 
-          {/* ── Clients Tab ── */}
           <TabsContent value="clients">
             <Card className="border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Gestion des clients</CardTitle>
+              <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <CardTitle>Gestion des clients</CardTitle>
+                  <CardDescription>Créez, modifiez et nettoyez la base des comptes suivis par l’équipe commerciale.</CardDescription>
+                </div>
                 <Dialog open={showClientDialog} onOpenChange={(open) => { setShowClientDialog(open); if (!open) setEditingClient(null); }}>
                   <DialogTrigger asChild>
                     <Button size="sm" onClick={() => setEditingClient(null)}>
-                      <Plus className="h-4 w-4 mr-1" /> Nouveau client
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nouveau client
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>{editingClient?.id ? "Modifier le client" : "Nouveau client"}</DialogTitle>
+                      <DialogTitle>{editingClient ? "Modifier le client" : "Nouveau client"}</DialogTitle>
                     </DialogHeader>
                     <ClientForm
                       client={editingClient}
@@ -372,7 +577,7 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 {!clients.length ? (
-                  <p className="text-muted-foreground text-sm py-4 text-center">Aucun client</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">Aucun client enregistré pour le moment.</p>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -380,25 +585,25 @@ export default function Admin() {
                         <TableHead>Entreprise</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Type</TableHead>
-                        <TableHead>CA Annuel</TableHead>
+                        <TableHead>CA annuel</TableHead>
                         <TableHead>Statut</TableHead>
                         <TableHead className="w-24">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {clients.map((c) => (
-                        <TableRow key={c.id}>
-                          <TableCell className="font-medium">{c.nom_entreprise}</TableCell>
-                          <TableCell>{c.contact_email}</TableCell>
-                          <TableCell>{c.type_client}</TableCell>
-                          <TableCell>{(c.ca_annuel || 0).toLocaleString("fr-FR")} €</TableCell>
-                          <TableCell><Badge variant={c.statut === "actif" ? "default" : "secondary"}>{c.statut}</Badge></TableCell>
+                      {clients.map((client) => (
+                        <TableRow key={client.id}>
+                          <TableCell className="font-medium">{client.nom_entreprise}</TableCell>
+                          <TableCell>{client.contact_email}</TableCell>
+                          <TableCell>{client.type_client}</TableCell>
+                          <TableCell>{Number(client.ca_annuel ?? 0).toLocaleString("fr-FR")} €</TableCell>
+                          <TableCell><Badge variant={client.statut === "actif" ? "default" : "secondary"}>{client.statut}</Badge></TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingClient(c); setShowClientDialog(true); }}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingClient(client); setShowClientDialog(true); }}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteClient.mutate(c.id)}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteClient.mutate(client.id)}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
@@ -412,20 +617,23 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
-          {/* ── Devis Tab ── */}
           <TabsContent value="devis">
             <Card className="border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Gestion des devis</CardTitle>
+              <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <CardTitle>Gestion des devis</CardTitle>
+                  <CardDescription>Centralisez les offres commerciales et suivez leur avancement depuis l’admin.</CardDescription>
+                </div>
                 <Dialog open={showDevisDialog} onOpenChange={(open) => { setShowDevisDialog(open); if (!open) setEditingDevis(null); }}>
                   <DialogTrigger asChild>
                     <Button size="sm" onClick={() => setEditingDevis(null)}>
-                      <Plus className="h-4 w-4 mr-1" /> Nouveau devis
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nouveau devis
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>{editingDevis?.id ? "Modifier le devis" : "Nouveau devis"}</DialogTitle>
+                      <DialogTitle>{editingDevis ? "Modifier le devis" : "Nouveau devis"}</DialogTitle>
                     </DialogHeader>
                     <DevisForm
                       devis={editingDevis}
@@ -438,12 +646,12 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 {!devis.length ? (
-                  <p className="text-muted-foreground text-sm py-4 text-center">Aucun devis</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">Aucun devis enregistré pour le moment.</p>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>N° Devis</TableHead>
+                        <TableHead>N° devis</TableHead>
                         <TableHead>Client</TableHead>
                         <TableHead>Service</TableHead>
                         <TableHead>Montant HT</TableHead>
@@ -452,19 +660,19 @@ export default function Admin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {devis.map((d) => (
-                        <TableRow key={d.id}>
-                          <TableCell className="font-medium">{d.numero_devis}</TableCell>
-                          <TableCell>{(d.clients as any)?.nom_entreprise || "—"}</TableCell>
-                          <TableCell>{d.type_service}</TableCell>
-                          <TableCell>{d.montant_ht.toLocaleString("fr-FR")} €</TableCell>
-                          <TableCell><Badge variant={d.statut === "accepté" ? "default" : "secondary"}>{d.statut}</Badge></TableCell>
+                      {devis.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.numero_devis}</TableCell>
+                          <TableCell>{clientNameById.get(item.id_client) ?? "—"}</TableCell>
+                          <TableCell>{item.type_service}</TableCell>
+                          <TableCell>{Number(item.montant_ht ?? 0).toLocaleString("fr-FR")} €</TableCell>
+                          <TableCell><Badge variant={item.statut === "accepté" ? "default" : "secondary"}>{item.statut}</Badge></TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingDevis(d); setShowDevisDialog(true); }}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingDevis(item); setShowDevisDialog(true); }}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDevis.mutate(d.id)}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDevis.mutate(item.id)}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
@@ -478,20 +686,23 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
-          {/* ── Tarifs Tab ── */}
           <TabsContent value="tarifs">
             <Card className="border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Gestion des tarifs</CardTitle>
+              <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <CardTitle>Gestion des tarifs</CardTitle>
+                  <CardDescription>Maintenez les références tarifaires à jour pour fiabiliser la création des propositions commerciales.</CardDescription>
+                </div>
                 <Dialog open={showTarifDialog} onOpenChange={(open) => { setShowTarifDialog(open); if (!open) setEditingTarif(null); }}>
                   <DialogTrigger asChild>
                     <Button size="sm" onClick={() => setEditingTarif(null)}>
-                      <Plus className="h-4 w-4 mr-1" /> Nouveau tarif
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nouveau tarif
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>{editingTarif?.id ? "Modifier le tarif" : "Nouveau tarif"}</DialogTitle>
+                      <DialogTitle>{editingTarif ? "Modifier le tarif" : "Nouveau tarif"}</DialogTitle>
                     </DialogHeader>
                     <TarifForm
                       tarif={editingTarif}
@@ -504,7 +715,7 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 {!tarifs.length ? (
-                  <p className="text-muted-foreground text-sm py-4 text-center">Aucun tarif</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">Aucun tarif enregistré pour le moment.</p>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -518,19 +729,19 @@ export default function Admin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {tarifs.map((t) => (
-                        <TableRow key={t.id}>
-                          <TableCell className="font-medium">{t.numero_devis}</TableCell>
-                          <TableCell>{(t.clients as any)?.nom_entreprise || "—"}</TableCell>
-                          <TableCell>{t.type_service}</TableCell>
-                          <TableCell>{t.montant_ht.toLocaleString("fr-FR")} €</TableCell>
-                          <TableCell><Badge variant={t.statut === "actif" ? "default" : "secondary"}>{t.statut}</Badge></TableCell>
+                      {tarifs.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.numero_devis}</TableCell>
+                          <TableCell>{clientNameById.get(item.id_client) ?? "—"}</TableCell>
+                          <TableCell>{item.type_service}</TableCell>
+                          <TableCell>{Number(item.montant_ht ?? 0).toLocaleString("fr-FR")} €</TableCell>
+                          <TableCell><Badge variant={item.statut === "actif" ? "default" : "secondary"}>{item.statut}</Badge></TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingTarif(t); setShowTarifDialog(true); }}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingTarif(item); setShowTarifDialog(true); }}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteTarif.mutate(t.id)}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteTarif.mutate(item.id)}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
