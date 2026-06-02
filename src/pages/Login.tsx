@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Leaf, Info } from "lucide-react";
+import { Leaf } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("hasnakharbouchepro@gmail.com");
