@@ -96,6 +96,18 @@ export default function Login() {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-primary">Démo rapide</p>
+              <p className="text-muted-foreground">
+                Email : <span className="text-foreground font-medium">hasnakharbouchepro@gmail.com</span>
+              </p>
+              <p className="text-muted-foreground">
+                Mot de passe : <span className="text-foreground font-medium">Yamina1953</span>
+              </p>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
