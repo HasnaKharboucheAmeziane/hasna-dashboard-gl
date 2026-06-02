@@ -7,11 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Leaf, Info } from "lucide-react";
+import { Leaf } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState("hasnakharbouchepro@gmail.com");
-  const [password, setPassword] = useState("Yamina1953");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
@@ -96,18 +96,17 @@ export default function Login() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-start gap-3">
-            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium text-primary">Démo rapide</p>
-              <p className="text-muted-foreground">
-                Email : <span className="text-foreground font-medium">hasnakharbouchepro@gmail.com</span>
-              </p>
-              <p className="text-muted-foreground">
-                Mot de passe : <span className="text-foreground font-medium">Yamina1953</span>
-              </p>
-            </div>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mb-4 border-dashed border-primary/50 text-primary hover:bg-primary/10 hover:text-primary"
+            onClick={() => {
+              setEmail("hasnakharbouchepro@gmail.com");
+              setPassword("Yamina1953");
+            }}
+          >
+            Démo rapide
+          </Button>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
