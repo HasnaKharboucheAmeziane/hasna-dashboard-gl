@@ -10,9 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Leaf, Info } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("hasnakharbouchepro@gmail.com");
+  const [password, setPassword] = useState("Yamina1953");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
