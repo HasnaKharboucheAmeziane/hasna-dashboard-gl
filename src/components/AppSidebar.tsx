@@ -76,21 +76,16 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem className="mt-2">
+                <SidebarMenuButton onClick={handleLogout} className="hover:bg-sidebar-accent/50 cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {!collapsed && <span>Déconnexion</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="hover:bg-sidebar-accent/50 cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              {!collapsed && <span>Déconnexion</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }
