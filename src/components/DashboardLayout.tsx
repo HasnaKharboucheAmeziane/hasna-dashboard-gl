@@ -12,7 +12,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <SidebarTrigger />
             <Breadcrumb />
           </header>
-          <main className="flex-1 p-6 animate-fade-in">
+          <main className="flex-1 p-4 md:p-6 animate-fade-in overflow-x-hidden">
             {children}
           </main>
         </div>

@@ -101,9 +101,9 @@ export default function DevisDetail() {
             <p className="text-sm text-muted-foreground">Client : {devis.clients?.nom_entreprise || "—"}</p>
           </div>
 
-          <div className="text-right">
+          <div className="text-left sm:text-right w-full sm:w-auto">
             <p className="text-sm text-muted-foreground">Email client</p>
-            <p className="font-medium">{devis.clients?.contact_email || "Non renseigné"}</p>
+            <p className="font-medium break-all">{devis.clients?.contact_email || "Non renseigné"}</p>
           </div>
         </div>
 
@@ -158,29 +158,29 @@ export default function DevisDetail() {
                 <Separator />
 
                 <div className="space-y-3">
-                  <div className="grid grid-cols-[1.6fr_0.6fr_0.8fr_0.8fr] gap-3 text-sm font-medium text-muted-foreground">
+                  <div className="hidden sm:grid sm:grid-cols-[1.6fr_0.6fr_0.8fr_0.8fr] gap-3 text-sm font-medium text-muted-foreground">
                     <div>Description</div>
                     <div>Quantité</div>
                     <div>Prix unitaire</div>
                     <div>Total HT</div>
                   </div>
 
-                  <div className="grid grid-cols-[1.6fr_0.6fr_0.8fr_0.8fr] gap-3 rounded-lg border border-border/50 bg-muted/20 p-4 text-sm">
-                    <div>
+                  <div className="grid grid-cols-2 sm:grid-cols-[1.6fr_0.6fr_0.8fr_0.8fr] gap-3 rounded-lg border border-border/50 bg-muted/20 p-4 text-sm">
+                    <div className="col-span-2 sm:col-span-1">
                       <p className="font-medium text-foreground">{pdfData.typeService} - {pdfData.zone}</p>
                       <p className="text-muted-foreground">Poids : {pdfData.poids} kg</p>
                     </div>
-                    <div>{pdfData.nbColis}</div>
-                    <div>{fmt(pdfData.prixUnitaire)}</div>
-                    <div>{fmt(pdfData.prixUnitaire * pdfData.nbColis)}</div>
+                    <div><span className="sm:hidden text-muted-foreground text-xs">Qté : </span>{pdfData.nbColis}</div>
+                    <div><span className="sm:hidden text-muted-foreground text-xs">PU : </span>{fmt(pdfData.prixUnitaire)}</div>
+                    <div className="col-span-2 sm:col-span-1 font-medium"><span className="sm:hidden text-muted-foreground text-xs font-normal">Total HT : </span>{fmt(pdfData.prixUnitaire * pdfData.nbColis)}</div>
                   </div>
 
                   {pdfData.optionsDetail.length > 0 && pdfData.optionsDetail.map((option, index) => (
-                    <div key={`${option.nom}-${index}`} className="grid grid-cols-[1.6fr_0.6fr_0.8fr_0.8fr] gap-3 rounded-lg border border-border/50 p-4 text-sm">
-                      <div className="font-medium">{option.nom}</div>
-                      <div>1</div>
-                      <div>{fmt(option.prix)}</div>
-                      <div>{fmt(option.prix)}</div>
+                    <div key={`${option.nom}-${index}`} className="grid grid-cols-2 sm:grid-cols-[1.6fr_0.6fr_0.8fr_0.8fr] gap-3 rounded-lg border border-border/50 p-4 text-sm">
+                      <div className="col-span-2 sm:col-span-1 font-medium">{option.nom}</div>
+                      <div><span className="sm:hidden text-muted-foreground text-xs">Qté : </span>1</div>
+                      <div><span className="sm:hidden text-muted-foreground text-xs">PU : </span>{fmt(option.prix)}</div>
+                      <div className="col-span-2 sm:col-span-1 font-medium"><span className="sm:hidden text-muted-foreground text-xs font-normal">Total HT : </span>{fmt(option.prix)}</div>
                     </div>
                   ))}
                 </div>

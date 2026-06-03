@@ -153,9 +153,9 @@ export default function ClientFiche() {
           <CardContent className="space-y-4">
             {/* Formulaire ajout */}
             <div className="space-y-3 p-4 rounded-lg border border-border/50 bg-muted/30">
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Select value={noteType} onValueChange={setNoteType}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -169,7 +169,7 @@ export default function ClientFiche() {
                   onClick={() => addNote.mutate()}
                   disabled={!newNote.trim() || addNote.isPending}
                   size="sm"
-                  className="shrink-0"
+                  className="shrink-0 w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4 mr-1" /> Ajouter
                 </Button>
