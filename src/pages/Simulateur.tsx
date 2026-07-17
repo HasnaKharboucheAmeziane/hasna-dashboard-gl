@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Calculator, Save, Package, MapPin, Weight, Settings, CheckCircle2 } from "lucide-react";
+import { HelpBubble } from "@/components/HelpBubble";
 import { generateDevisPdf } from "@/utils/generateDevisPdf";
 
 const TVA_RATE = 0.20;
@@ -216,6 +217,18 @@ export default function Simulateur() {
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Calculator className="h-6 w-6 text-primary" /> Simulateur de devis
+            <HelpBubble title="Comment ça marche ?">
+              Le simulateur calcule un tarif <strong>en temps réel</strong> à partir des tables tarifs et options.
+              <br /><br />
+              <strong>Étapes :</strong>
+              <ol className="list-decimal list-inside mt-1 space-y-0.5">
+                <li>Choisissez un client</li>
+                <li>Sélectionnez un service et une zone</li>
+                <li>Renseignez le poids et le nombre de colis</li>
+                <li>Cochez éventuellement des options</li>
+                <li>Cliquez sur <em>Valider en devis</em> — un PDF est généré automatiquement</li>
+              </ol>
+            </HelpBubble>
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             Calculez un tarif en temps réel et enregistrez-le en devis
