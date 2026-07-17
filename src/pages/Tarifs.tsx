@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { HelpBubble } from "@/components/HelpBubble";
 
 export default function Tarifs() {
   const { data: tarifs, isLoading } = useQuery({
@@ -19,7 +20,14 @@ export default function Tarifs() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold">Tarifs</h1>
+          <h1 className="text-2xl font-semibold flex items-center gap-2">
+            Tarifs
+            <HelpBubble title="Grille tarifaire">
+              Consultez ici la <strong>grille des tarifs</strong> par type de service (Standard, Express, Urgent, Palette), zone géographique et tranche de poids.
+              <br /><br />
+              Ces tarifs sont utilisés automatiquement par le <strong>Simulateur</strong> pour calculer les devis en temps réel.
+            </HelpBubble>
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">Grille tarifaire et conditions</p>
         </div>
 

@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { HelpBubble } from "@/components/HelpBubble";
 
 type Client = Tables<"clients">;
 type Devis = Tables<"devis">;
@@ -505,7 +506,14 @@ export default function Admin() {
             <div className="max-w-2xl space-y-3">
               <Badge variant="secondary" className="w-fit">Administration du site</Badge>
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight">Centre de gestion GreenLogistics</h1>
+                <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-2">
+                  Centre de gestion GreenLogistics
+                  <HelpBubble title="Espace administration" side="bottom">
+                    C'est ici que vous <strong>créez, modifiez et supprimez</strong> les clients, devis et tarifs.
+                    <br /><br />
+                    Utilisez les <strong>onglets</strong> ci-dessous pour basculer entre les différentes ressources, et les boutons <em>« Nouveau … »</em> pour ajouter une entrée.
+                  </HelpBubble>
+                </h1>
                 <p className="text-sm leading-6 text-muted-foreground">
                   Pilotez les données commerciales, surveillez les étapes clés du cycle client et intervenez rapidement sur chaque contenu métier du site.
                 </p>

@@ -5,6 +5,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { HelpBubble } from "@/components/HelpBubble";
 export default function Clients() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -19,7 +20,14 @@ export default function Clients() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold">Clients</h1>
+          <h1 className="text-2xl font-semibold flex items-center gap-2">
+            Clients
+            <HelpBubble title="Portefeuille clients">
+              Retrouvez ici tous vos clients. <strong>Cliquez sur le nom d'une entreprise</strong> pour ouvrir sa fiche détaillée avec ses informations et ses notes internes horodatées (appels, relances, comptes-rendus).
+              <br /><br />
+              Pour <strong>créer un nouveau client</strong>, rendez-vous dans la section <em>Administration</em>.
+            </HelpBubble>
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">Gestion de votre portefeuille clients</p>
         </div>
 

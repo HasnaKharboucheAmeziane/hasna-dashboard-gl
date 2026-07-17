@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
 import { Users, FileText, DollarSign, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HelpBubble } from "@/components/HelpBubble";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
@@ -44,7 +45,14 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold">Tableau de bord</h1>
+          <h1 className="text-2xl font-semibold flex items-center gap-2">
+            Tableau de bord
+            <HelpBubble title="Bienvenue 👋">
+              Cette page donne une <strong>vue d'ensemble</strong> de votre activité : nombre de clients, devis en cours, chiffre d'affaires cumulé et derniers devis créés.
+              <br /><br />
+              Utilisez la <strong>sidebar à gauche</strong> pour naviguer entre les différentes sections (Clients, Devis, Simulateur, Tarifs, Administration).
+            </HelpBubble>
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">Vue d'ensemble de votre activité commerciale</p>
         </div>
 

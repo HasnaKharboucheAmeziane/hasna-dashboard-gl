@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { HelpBubble } from "@/components/HelpBubble";
 import { ExternalLink } from "lucide-react";
 import { getDevisStatusLabel, type DevisRow } from "@/utils/devis";
 
@@ -46,7 +47,16 @@ export default function Devis() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold">Devis</h1>
+          <h1 className="text-2xl font-semibold flex items-center gap-2">
+            Devis
+            <HelpBubble title="Gestion des devis">
+              Cette page liste tous les devis générés. Chaque devis a un <strong>statut</strong> : <em>à valider</em>, <em>envoyé</em>, <em>accepté</em> ou <em>refusé</em>.
+              <br /><br />
+              👉 Cliquez sur le bouton <strong>« à valider »</strong> pour ouvrir le devis, le consulter et l'envoyer par email au client.
+              <br /><br />
+              Pour créer un nouveau devis, utilisez le <strong>Simulateur</strong>.
+            </HelpBubble>
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">Suivi et gestion de vos devis</p>
         </div>
 
