@@ -2,8 +2,10 @@ import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { UserGuide } from "@/components/UserGuide";
-import { Menu } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Menu, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 
 
 function MobileMenuButton() {
