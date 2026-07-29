@@ -43,6 +43,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <Monitor className="h-4 w-4 !text-primary" />
                 <AlertDescription>
                   Ce dashboard est optimisé pour une utilisation sur ordinateur et n'a pas vocation à être exploité en version mobile pour le moment.
+                  <br className="hidden sm:block" />
+                  <span className="block sm:inline mt-1 sm:mt-0 sm:ml-1">Les données et l'entreprise présentées sont fictives.</span>
                 </AlertDescription>
               </Alert>
             </footer>
