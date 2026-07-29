@@ -1,8 +1,10 @@
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { UserGuide } from "@/components/UserGuide";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 
 function MobileMenuButton() {
   const { toggleSidebar } = useSidebar();
@@ -25,9 +27,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center gap-4 border-b px-4 bg-card">
-            <MobileMenuButton />
-            <Breadcrumb />
+          <header className="h-14 flex items-center justify-between gap-4 border-b px-4 bg-card">
+            <div className="flex items-center gap-4 min-w-0">
+              <MobileMenuButton />
+              <Breadcrumb />
+            </div>
+            <UserGuide />
           </header>
           <main className="flex-1 p-4 md:p-6 animate-fade-in overflow-x-hidden">
             {children}
