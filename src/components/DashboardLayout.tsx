@@ -2,8 +2,10 @@ import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { UserGuide } from "@/components/UserGuide";
-import { Menu } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Menu, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 
 
 function MobileMenuButton() {
@@ -36,6 +38,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </header>
           <main className="flex-1 p-4 md:p-6 animate-fade-in overflow-x-hidden">
             {children}
+            <footer className="mt-10">
+              <Alert className="border-primary/20 bg-primary/5 text-primary">
+                <Monitor className="h-4 w-4 !text-primary" />
+                <AlertDescription>
+                  Ce dashboard est optimisé pour une utilisation sur ordinateur et n'a pas vocation à être exploité en version mobile pour le moment.
+                </AlertDescription>
+              </Alert>
+            </footer>
           </main>
         </div>
       </div>
